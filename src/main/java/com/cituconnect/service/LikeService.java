@@ -1,10 +1,12 @@
 package com.cituconnect.service;
 
-import com.cituconnect.entity.Like;
+import com.cituconnect.entity.ForumLike;
+import com.cituconnect.entity.DiscussionLike;
 import com.cituconnect.entity.Forum;
 import com.cituconnect.entity.Discussion;
 import com.cituconnect.entity.User;
-import com.cituconnect.repository.LikeRepository;
+import com.cituconnect.repository.ForumLikeRepository; // Changed
+import com.cituconnect.repository.DiscussionLikeRepository; // Changed
 import com.cituconnect.repository.ForumRepository;
 import com.cituconnect.repository.DiscussionRepository;
 import com.cituconnect.repository.UserRepository;
@@ -15,7 +17,10 @@ import java.util.Optional;
 @Service
 public class LikeService {
     @Autowired
-    private LikeRepository likeRepository;
+    private ForumLikeRepository forumLikeRepository; // Changed
+
+    @Autowired
+    private DiscussionLikeRepository discussionLikeRepository; // Changed
 
     @Autowired
     private ForumRepository forumRepository;
@@ -26,7 +31,7 @@ public class LikeService {
     @Autowired
     private UserRepository userRepository;
 
-    public Like toggleForumLike(Long userId, Long forumId) {
+    public ForumLike toggleForumLike(Long userId, Long forumId) {
         Optional<User> user = userRepository.findById(userId);
         Optional<Forum> forum = forumRepository.findById(forumId);
 
@@ -34,23 +39,23 @@ public class LikeService {
             return null;
         }
 
-        Optional<Like> existingLike = likeRepository.findByUserUserIdAndForumId(userId, forumId);
+        Optional<ForumLike> existingLike = forumLikeRepository.findByUserUserIdAndForumId(userId, forumId);
 
         if (existingLike.isPresent()) {
             // Unlike
-            likeRepository.delete(existingLike.get());
+            forumLikeRepository.delete(existingLike.get());
             return null;
         } else {
             // Like
-            Like like = Like.builder()
+            ForumLike like = ForumLike.builder() // Changed
                     .user(user.get())
                     .forum(forum.get())
                     .build();
-            return likeRepository.save(like);
+            return forumLikeRepository.save(like); // Changed
         }
     }
 
-    public Like toggleDiscussionLike(Long userId, Long discussionId) {
+    public DiscussionLike toggleDiscussionLike(Long userId, Long discussionId) {
         Optional<User> user = userRepository.findById(userId);
         Optional<Discussion> discussion = discussionRepository.findById(discussionId);
 
@@ -58,35 +63,35 @@ public class LikeService {
             return null;
         }
 
-        Optional<Like> existingLike = likeRepository.findByUserUserIdAndDiscussionId(userId, discussionId);
+        Optional<DiscussionLike> existingLike = discussionLikeRepository.findByUserUserIdAndDiscussionId(userId, discussionId); // Changed
 
         if (existingLike.isPresent()) {
             // Unlike
-            likeRepository.delete(existingLike.get());
+            discussionLikeRepository.delete(existingLike.get()); // Changed
             return null;
         } else {
             // Like
-            Like like = Like.builder()
+            DiscussionLike like = DiscussionLike.builder() // Changed
                     .user(user.get())
                     .discussion(discussion.get())
                     .build();
-            return likeRepository.save(like);
+            return discussionLikeRepository.save(like); // Changed
         }
     }
 
     public boolean isForumLikedByUser(Long userId, Long forumId) {
-        return likeRepository.findByUserUserIdAndForumId(userId, forumId).isPresent();
+        return forumLikeRepository.findByUserUserIdAndForumId(userId, forumId).isPresent(); // Changed
     }
 
     public boolean isDiscussionLikedByUser(Long userId, Long discussionId) {
-        return likeRepository.findByUserUserIdAndDiscussionId(userId, discussionId).isPresent();
+        return discussionLikeRepository.findByUserUserIdAndDiscussionId(userId, discussionId).isPresent(); // Changed
     }
 
     public Long getForumLikeCount(Long forumId) {
-        return likeRepository.countByForumId(forumId);
+        return forumLikeRepository.countByForumId(forumId); // Changed
     }
 
     public Long getDiscussionLikeCount(Long discussionId) {
-        return likeRepository.countByDiscussionId(discussionId);
+        return discussionLikeRepository.countByDiscussionId(discussionId); // Changed
     }
 }

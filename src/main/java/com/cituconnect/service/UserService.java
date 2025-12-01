@@ -19,13 +19,27 @@ public class UserService {
 
     public User createUser(String name, String email, String password) {
         User user = User.builder()
-            .name(name)
-            .email(email)
-            .password(passwordEncoder.encode(password))
-            .dateRegistered(LocalDateTime.now())
-            .lastActive(LocalDateTime.now())
-            .isActive(true)
-            .build();
+                .name(name)
+                .email(email)
+                .password(passwordEncoder.encode(password))
+                .role("USER")
+                .dateRegistered(LocalDateTime.now())
+                .lastActive(LocalDateTime.now())
+                .isActive(true)
+                .build();
+        return userRepository.save(user);
+    }
+
+    public User createAdminUser(String name, String email, String password) {
+        User user = User.builder()
+                .name(name)
+                .email(email)
+                .password(passwordEncoder.encode(password))
+                .role("ADMIN")
+                .dateRegistered(LocalDateTime.now())
+                .lastActive(LocalDateTime.now())
+                .isActive(true)
+                .build();
         return userRepository.save(user);
     }
 
@@ -46,6 +60,8 @@ public class UserService {
             if (userDetails.getYearLevel() != null) existingUser.setYearLevel(userDetails.getYearLevel());
             if (userDetails.getStudentId() != null) existingUser.setStudentId(userDetails.getStudentId());
             if (userDetails.getBio() != null) existingUser.setBio(userDetails.getBio());
+            // Optional: Add logic to allow updating role if authenticated as admin
+            // if (userDetails.getRole() != null) existingUser.setRole(userDetails.getRole());
             existingUser.setLastActive(LocalDateTime.now());
             return userRepository.save(existingUser);
         }
@@ -71,6 +87,4 @@ public class UserService {
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
-
-
 }

@@ -1,7 +1,7 @@
 package com.cituconnect.controller;
 
 import com.cituconnect.entity.Discussion;
-import com.cituconnect.entity.Like;
+import com.cituconnect.entity.DiscussionLike; // Changed: Import DiscussionLike
 import com.cituconnect.entity.User;
 import com.cituconnect.repository.DiscussionRepository;
 import com.cituconnect.service.DiscussionService;
@@ -28,6 +28,12 @@ public class DiscussionController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private LikeService likeService;
+
+    @Autowired
+    private DiscussionRepository discussionRepository;
 
     @PostMapping
     public ResponseEntity<?> createDiscussion(@RequestBody Discussion discussion) {
@@ -69,12 +75,6 @@ public class DiscussionController {
         return ResponseEntity.ok(updatedDiscussion);
     }
 
-    @Autowired
-    private LikeService likeService;
-
-    @Autowired
-    private DiscussionRepository discussionRepository;
-
     @GetMapping("/{id}")
     public ResponseEntity<?> getDiscussionReply(@PathVariable Long id) {
         Optional<Discussion> discussion = discussionRepository.findById(id);
@@ -99,7 +99,7 @@ public class DiscussionController {
             return ResponseEntity.badRequest().body(Map.of("error", "userId is required"));
         }
 
-        Like result = likeService.toggleDiscussionLike(userId, id);
+        DiscussionLike result = likeService.toggleDiscussionLike(userId, id);
         boolean isLiked = result != null;
         Long likeCount = likeService.getDiscussionLikeCount(id);
 
