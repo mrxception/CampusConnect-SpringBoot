@@ -1,92 +1,103 @@
 package com.cituconnect.service;
 
-import com.cituconnect.entity.Like;
+import com.cituconnect.entity.ForumLike;
+import com.cituconnect.entity.DiscussionLike;
 import com.cituconnect.entity.Forum;
 import com.cituconnect.entity.Discussion;
 import com.cituconnect.entity.User;
-import com.cituconnect.repository.LikeRepository;
-import com.cituconnect.repository.ForumRepository;
-import com.cituconnect.repository.DiscussionRepository;
-import com.cituconnect.repository.UserRepository;
+import com.cituconnect.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
 public class LikeService {
-    @Autowired
-    private LikeRepository likeRepository;
+    @Autowired private ForumLikeRepository forumLikeRepository;
+    @Autowired private DiscussionLikeRepository discussionLikeRepository;
+    @Autowired private ForumRepository forumRepository;
+    @Autowired private DiscussionRepository discussionRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private NotificationService notificationService;
 
-    @Autowired
-    private ForumRepository forumRepository;
-
-    @Autowired
-    private DiscussionRepository discussionRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    public Like toggleForumLike(Long userId, Long forumId) {
+    public ForumLike toggleForumLike(Long userId, Long forumId) {
         Optional<User> user = userRepository.findById(userId);
         Optional<Forum> forum = forumRepository.findById(forumId);
 
-        if (user.isEmpty() || forum.isEmpty()) {
-            return null;
-        }
+        if (user.isEmpty() || forum.isEmpty()) return null;
 
-        Optional<Like> existingLike = likeRepository.findByUserUserIdAndForumId(userId, forumId);
+        Optional<ForumLike> existingLike = forumLikeRepository.findByUserUserIdAndForumId(userId, forumId);
 
         if (existingLike.isPresent()) {
-            // Unlike
-            likeRepository.delete(existingLike.get());
+            forumLikeRepository.delete(existingLike.get());
             return null;
         } else {
-            // Like
-            Like like = Like.builder()
+            ForumLike like = ForumLike.builder()
                     .user(user.get())
                     .forum(forum.get())
                     .build();
-            return likeRepository.save(like);
+            ForumLike saved = forumLikeRepository.save(like);
+
+            User owner = forum.get().getUser();
+            if (!owner.getUserId().equals(userId)) {
+                notificationService.createNotification(
+                        owner.getUserId(),
+                        "New Like",
+                        user.get().getName() + " liked your post: \"" + forum.get().getTitle() + "\"",
+                        "LIKE",
+                        forumId
+                );
+            }
+            return saved;
         }
     }
 
-    public Like toggleDiscussionLike(Long userId, Long discussionId) {
+    public DiscussionLike toggleDiscussionLike(Long userId, Long discussionId) {
         Optional<User> user = userRepository.findById(userId);
         Optional<Discussion> discussion = discussionRepository.findById(discussionId);
 
-        if (user.isEmpty() || discussion.isEmpty()) {
-            return null;
-        }
+        if (user.isEmpty() || discussion.isEmpty()) return null;
 
-        Optional<Like> existingLike = likeRepository.findByUserUserIdAndDiscussionId(userId, discussionId);
+        Optional<DiscussionLike> existingLike = discussionLikeRepository.findByUserUserIdAndDiscussionId(userId, discussionId);
 
         if (existingLike.isPresent()) {
-            // Unlike
-            likeRepository.delete(existingLike.get());
+            discussionLikeRepository.delete(existingLike.get());
             return null;
         } else {
-            // Like
-            Like like = Like.builder()
+            DiscussionLike like = DiscussionLike.builder()
                     .user(user.get())
                     .discussion(discussion.get())
                     .build();
-            return likeRepository.save(like);
+            DiscussionLike saved = discussionLikeRepository.save(like);
+
+            User owner = discussion.get().getUser();
+            if (!owner.getUserId().equals(userId)) {
+                Long forumId = discussion.get().getForum() != null ? discussion.get().getForum().getId() : null;
+
+                notificationService.createNotification(
+                        owner.getUserId(),
+                        "New Like",
+                        user.get().getName() + " liked your comment.",
+                        "LIKE",
+                        forumId
+                );
+            }
+            return saved;
         }
     }
 
     public boolean isForumLikedByUser(Long userId, Long forumId) {
-        return likeRepository.findByUserUserIdAndForumId(userId, forumId).isPresent();
+        return forumLikeRepository.findByUserUserIdAndForumId(userId, forumId).isPresent();
     }
 
     public boolean isDiscussionLikedByUser(Long userId, Long discussionId) {
-        return likeRepository.findByUserUserIdAndDiscussionId(userId, discussionId).isPresent();
+        return discussionLikeRepository.findByUserUserIdAndDiscussionId(userId, discussionId).isPresent();
     }
 
     public Long getForumLikeCount(Long forumId) {
-        return likeRepository.countByForumId(forumId);
+        return forumLikeRepository.countByForumId(forumId);
     }
 
     public Long getDiscussionLikeCount(Long discussionId) {
-        return likeRepository.countByDiscussionId(discussionId);
+        return discussionLikeRepository.countByDiscussionId(discussionId);
     }
 }

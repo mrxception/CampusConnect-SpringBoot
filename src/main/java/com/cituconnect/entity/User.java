@@ -33,6 +33,9 @@ public class User {
 
     private String profileImageUrl;
 
+    @Column(nullable = false)
+    private String role = "USER";
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime dateRegistered = LocalDateTime.now();
 
@@ -40,4 +43,7 @@ public class User {
     private LocalDateTime lastActive = LocalDateTime.now();
 
     private Boolean isActive = true;
+
+    @Column(nullable = false)
+    private Boolean isOnline = false;
 }
