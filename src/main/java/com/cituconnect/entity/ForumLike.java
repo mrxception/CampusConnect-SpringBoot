@@ -1,0 +1,32 @@
+package com.cituconnect.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "forum_likes", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "forum_id"})
+})
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ForumLike {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "forum_id", nullable = false)
+    private Forum forum;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+}
