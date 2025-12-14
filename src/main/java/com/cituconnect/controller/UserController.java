@@ -59,7 +59,8 @@ public class UserController {
                     "token", token,
                     "userId", user.getUserId(),
                     "name", user.getName(),
-                    "email", user.getEmail()
+                    "email", user.getEmail(),
+                    "role", user.getRole()
             ));
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -105,6 +106,25 @@ public class UserController {
         }
         return ResponseEntity.ok(updatedUser);
     }
+
+    @PutMapping("/{userId}/role")
+    public ResponseEntity<?> updateUserRole(@PathVariable Long userId, @RequestBody Map<String, String> request) {
+        Optional<User> userOptional = userService.getUserById(userId);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String newRole = request.get("role");
+        if (newRole == null || (!newRole.equals("USER") && !newRole.equals("ADMIN"))) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid role specified. Must be USER or ADMIN."));
+        }
+
+        User user = userOptional.get();
+        user.setRole(newRole);
+        User updatedUser = userService.updateUser(userId, user);
+        return ResponseEntity.ok(Map.of("message", "User role updated successfully", "user", updatedUser));
+    }
+
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable Long userId) {

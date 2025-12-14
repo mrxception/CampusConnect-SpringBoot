@@ -32,8 +32,11 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/**").permitAll()
+                        // Admin endpoints - require ADMIN role
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // Forum and discussion endpoints - authenticated users
                         .requestMatchers("/forum/**", "/discussion/**").authenticated()
+                        // All other endpoints - allow public access
                         .anyRequest().permitAll()
                 )
                 .httpBasic(basic -> basic.disable());

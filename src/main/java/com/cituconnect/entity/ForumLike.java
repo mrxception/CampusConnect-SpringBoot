@@ -6,15 +6,14 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "likes", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "forum_id"}),
-        @UniqueConstraint(columnNames = {"user_id", "discussion_id"})
+@Table(name = "forum_likes", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "forum_id"})
 })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Like {
+public class ForumLike {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,12 +23,8 @@ public class Like {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "forum_id", nullable = true)
+    @JoinColumn(name = "forum_id", nullable = false)
     private Forum forum;
-
-    @ManyToOne
-    @JoinColumn(name = "discussion_id", nullable = true)
-    private Discussion discussion;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
