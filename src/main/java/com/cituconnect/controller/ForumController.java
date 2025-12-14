@@ -1,7 +1,7 @@
 package com.cituconnect.controller;
 
 import com.cituconnect.entity.Forum;
-import com.cituconnect.entity.Like;
+import com.cituconnect.entity.ForumLike; // Changed: Import ForumLike
 import com.cituconnect.entity.User;
 import com.cituconnect.repository.ForumRepository;
 import com.cituconnect.service.ForumService;
@@ -28,6 +28,12 @@ public class ForumController {
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
+
+    @Autowired
+    private LikeService likeService;
+
+    @Autowired
+    private ForumRepository forumRepository;
 
     @PostMapping
     public ResponseEntity<?> createForum(@RequestBody Forum forum) {
@@ -84,12 +90,6 @@ public class ForumController {
         return ResponseEntity.ok(Map.of("message", "Reply added", "forum", forum));
     }
 
-    @Autowired
-    private LikeService likeService;
-
-    @Autowired
-    private ForumRepository forumRepository;
-
     @GetMapping("/{id}")
     public ResponseEntity<?> getForumPost(@PathVariable Long id) {
         Optional<Forum> forum = forumRepository.findById(id);
@@ -114,7 +114,7 @@ public class ForumController {
             return ResponseEntity.badRequest().body(Map.of("error", "userId is required"));
         }
 
-        Like result = likeService.toggleForumLike(userId, id);
+        ForumLike result = likeService.toggleForumLike(userId, id);
         boolean isLiked = result != null;
         Long likeCount = likeService.getForumLikeCount(id);
 
