@@ -1,55 +1,61 @@
 package com.cituconnect.service;
 
 import com.cituconnect.entity.Notification;
+import com.cituconnect.entity.User;
 import com.cituconnect.repository.NotificationRepository;
+import com.cituconnect.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class NotificationService {
-    @Autowired
-    private NotificationRepository notificationRepository;
 
-    public Notification createNotification(Notification notification) {
-        notification.setCreatedAt(LocalDateTime.now());
-        notification.setIsRead(false);
-        return notificationRepository.save(notification);
-    }
+    @Autowired private NotificationRepository notificationRepository;
+    @Autowired private UserRepository userRepository;
 
-    public Optional<Notification> getNotificationById(Long id) {
-        return notificationRepository.findById(id);
-    }
-
-    public List<Notification> getNotificationsForUser(Long userId) {
+    public List<Notification> getUserNotifications(Long userId) {
         return notificationRepository.findByUserUserIdOrderByCreatedAtDesc(userId);
     }
 
-    public List<Notification> getUnreadNotifications(Long userId) {
-        return notificationRepository.findByUserUserIdAndIsReadFalse(userId);
-    }
-
-    public Long getUnreadCount(Long userId) {
+    public long getUnreadCount(Long userId) {
         return notificationRepository.countByUserUserIdAndIsReadFalse(userId);
     }
 
-    public Notification markAsRead(Long id) {
-        Optional<Notification> notification = notificationRepository.findById(id);
-        if (notification.isPresent()) {
-            Notification n = notification.get();
+    public void markAsRead(Long id) {
+        notificationRepository.findById(id).ifPresent(n -> {
             n.setIsRead(true);
-            return notificationRepository.save(n);
+            notificationRepository.save(n);
+        });
+    }
+
+    public void markAllAsRead(Long userId) {
+        List<Notification> list = notificationRepository.findByUserUserIdOrderByCreatedAtDesc(userId);
+        for (Notification n : list) {
+            if (!Boolean.TRUE.equals(n.getIsRead())) {
+                n.setIsRead(true);
+            }
         }
-        return null;
+        notificationRepository.saveAll(list);
     }
 
-    public void deleteNotification(Long id) {
-        notificationRepository.deleteById(id);
-    }
+    public void createNotification(Long recipientId, String title, String message, String type, Long relatedItemId) {
+        User recipient = userRepository.findById(recipientId).orElse(null);
 
-    public List<Notification> getAllNotifications() {
-        return notificationRepository.findAll();
+        if (recipient != null) {
+            Notification n = Notification.builder()
+                    .user(recipient)
+                    .title(title)
+                    .message(message)
+                    .type(type)
+                    .relatedItemId(relatedItemId)
+                    .isRead(false)
+                    .isUrgent(false)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            notificationRepository.save(n);
+        }
     }
 }
