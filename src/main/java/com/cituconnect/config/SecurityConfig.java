@@ -15,6 +15,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -32,11 +33,13 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // Admin endpoints - require ADMIN role
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        // Forum and discussion endpoints - authenticated users
-                        .requestMatchers("/forum/**", "/discussion/**").authenticated()
-                        // All other endpoints - allow public access
+                        .requestMatchers("/users/**").permitAll()
+
+                        .requestMatchers("/admin/**").permitAll()
+
+                        .requestMatchers("/forum/**", "/discussion/**").permitAll()
+                        .requestMatchers("/lost-found/**").permitAll()
+
                         .anyRequest().permitAll()
                 )
                 .httpBasic(basic -> basic.disable());
@@ -53,10 +56,14 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(false);
+
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
+
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

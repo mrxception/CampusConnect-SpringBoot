@@ -9,4 +9,7 @@ import java.util.Optional;
 public interface ForumLikeRepository extends JpaRepository<ForumLike, Long> {
     Optional<ForumLike> findByUserUserIdAndForumId(Long userId, Long forumId);
     Long countByForumId(Long forumId);
+
+    void deleteByForumId(Long forumId);
+    void deleteByUserUserId(Long userId);
 }

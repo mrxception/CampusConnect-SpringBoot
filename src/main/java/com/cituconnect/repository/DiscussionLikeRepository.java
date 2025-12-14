@@ -9,4 +9,7 @@ import java.util.Optional;
 public interface DiscussionLikeRepository extends JpaRepository<DiscussionLike, Long> {
     Optional<DiscussionLike> findByUserUserIdAndDiscussionId(Long userId, Long discussionId);
     Long countByDiscussionId(Long discussionId);
+
+    void deleteByDiscussionId(Long discussionId);
+    void deleteByUserUserId(Long userId);
 }

@@ -4,6 +4,7 @@ import com.cituconnect.entity.User;
 import com.cituconnect.service.UserService;
 import com.cituconnect.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,10 @@ public class UserController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Missing required fields"));
             }
 
+            if (!email.contains("@cit.edu")){
+                return ResponseEntity.badRequest().body(Map.of("error", "Please use your CIT email address"));
+            }
+
             User user = userService.createUser(name, email, password);
             return ResponseEntity.ok(Map.of("message", "User registered successfully", "user", user));
         } catch (Exception e) {
@@ -51,9 +56,9 @@ public class UserController {
                 return ResponseEntity.status(401).body(Map.of("message", "Invalid credentials"));
             }
 
-            String token = jwtTokenUtil.generateToken(email, user.getUserId(), user.getName());
-            user.setLastActive(LocalDateTime.now());
-            userService.updateUser(user.getUserId(), user);
+            String token = jwtTokenUtil.generateToken(email, user.getUserId(), user.getName(), user.getRole());
+
+            userService.updateUserHeartbeat(email);
 
             return ResponseEntity.ok(Map.of(
                     "token", token,
@@ -130,5 +135,25 @@ public class UserController {
     public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
         userService.deleteUser(userId);
         return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+    }
+
+    @PostMapping("/heartbeat")
+    public ResponseEntity<?> heartbeat(@RequestHeader(value = "Authorization", required = false) String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            String jwt = token.substring(7);
+            String email = jwtTokenUtil.getEmailFromToken(jwt);
+
+            if (email != null) {
+                userService.updateUserHeartbeat(email);
+                return ResponseEntity.ok().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }
